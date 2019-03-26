@@ -27,10 +27,6 @@ public class ProfilerTranslator implements Translator {
         }
     }
 
-    /*
-        2 reads no msm metodo é suposto ??
-        read write no objecto a do objecto b soma no objecto a ou b
-    */
     private void profile(CtClass ctClass) throws ClassNotFoundException, NotFoundException, CannotCompileException {
         CtField ctField = CtField.make("public static int[] __rwCounter = new int[2];", ctClass);
         ctClass.addField(ctField);
