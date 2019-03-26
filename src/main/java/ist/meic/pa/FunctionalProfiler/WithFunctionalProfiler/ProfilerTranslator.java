@@ -32,16 +32,6 @@ public class ProfilerTranslator implements Translator {
         ctClass.addField(ctField);
 
         for(CtConstructor ctConstructor : ctClass.getDeclaredConstructors()) {
-            int[] __rwCounter = new int[2];
-            ctConstructor.instrument(new ExprEditor() {
-                public void edit(FieldAccess fa) throws CannotCompileException {
-                    if (fa.isStatic()) return;
-                    if (fa.isReader())  __rwCounter[0]++;
-                    if (fa.isWriter())  __rwCounter[1]++;
-                }
-            });
-            ctConstructor.insertAfter(" { __rwCounter[0] += " + __rwCounter[0] + "; __rwCounter[1] += " + __rwCounter[1] + "; } ");
-
             ctConstructor.insertAfter(" { " + mainClassName + ".__rwCounters.putIfAbsent(\"" + ctClass.getName() + "\", __rwCounter); } ");
         }
 
