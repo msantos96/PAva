@@ -24,7 +24,6 @@ public class ProfilerTranslator implements Translator {
     public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
         CtClass ctClass = pool.get(className);
         try {
-            
             if(className.startsWith("java")) return;
             if(className.equals(mainClassName)) return;
             if(className.equals("ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.RWCounter")) return;
