@@ -13,6 +13,7 @@ public class RWCounter {
             counter[0] += c[0];
             counter[1] += c[1];
         }
+        
         System.out.println("\nTotal reads: " + counter[0] + " Total writes: " + counter[1]);
         for(String key : __rwCounters.keySet())
             System.out.println("class " + key + " -> reads: " + __rwCounters.get(key)[0] + " write: " + __rwCounters.get(key)[1]);
