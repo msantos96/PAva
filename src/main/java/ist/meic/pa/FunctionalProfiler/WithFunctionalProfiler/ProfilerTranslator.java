@@ -4,7 +4,7 @@ import javassist.*;
 import javassist.expr.*;
 import java.util.HashMap;
 import java.util.Arrays;
-import ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.Skip;
+import ist.meic.pa.FunctionalProfilerExtended.Skip;
 
 public class ProfilerTranslator implements Translator {
     private String mainClassName;
