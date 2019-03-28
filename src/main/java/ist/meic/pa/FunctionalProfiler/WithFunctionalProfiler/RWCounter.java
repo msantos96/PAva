@@ -2,6 +2,9 @@ package ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler;
 
 import java.util.HashMap;
 
+import ist.meic.pa.FunctionalProfilerExtended.Skip;
+
+@Skip
 public class RWCounter {
     private HashMap<String, int[]> __rwCounters = new HashMap<String, int[]>();
     public void putIfAbsent(String key, int[] value) {
