@@ -25,7 +25,7 @@ public class ProfilerTranslator implements Translator {
     public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
         CtClass ctClass = pool.get(className);
         try {
-            if(ctClass.hasAnnotation​(Skip.class)) return;
+            if(ctClass.hasAnnotation(Skip.class)) return;
             profile(pool, ctClass, ctClass.getDeclaredConstructors());
             profile(pool, ctClass, ctClass.getDeclaredMethods());
         } catch (ClassNotFoundException e) {
