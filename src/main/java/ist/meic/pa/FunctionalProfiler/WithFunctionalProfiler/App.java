@@ -7,8 +7,6 @@ import javassist.*;
 
 public class App {
     public static void main(String[] args) throws Throwable {
-        //converter 1 0 para read write ou complicar RWCounter
-        //se tiver um if temos que verificar se é mesmo lida ?????
         if(args.length < 2) {
             System.out.println("Usage: java <path> <class>"); //gradle run --args='../Tests/build/libs/Tests.jar Tests.App'
             System.exit(1);

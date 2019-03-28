@@ -3,7 +3,6 @@ package ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler;
 import javassist.*;
 import javassist.expr.*;
 import java.util.HashMap;
-import java.util.Arrays;
 import ist.meic.pa.FunctionalProfilerExtended.Skip;
 
 public class ProfilerTranslator implements Translator {
@@ -26,39 +25,44 @@ public class ProfilerTranslator implements Translator {
     public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
         CtClass ctClass = pool.get(className);
         try {
-            if(ctClass.hasAnnotation(Skip.class)) return;
-            profile(pool, className, ctClass.getDeclaredConstructors());
-            profile(pool, className, ctClass.getDeclaredMethods());
+            if(ctClass.hasAnnotation​(Skip.class)) return;
+            profile(pool, ctClass, ctClass.getDeclaredConstructors());
+            profile(pool, ctClass, ctClass.getDeclaredMethods());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void profile(ClassPool pool, String className, CtBehavior[] ctBehaviors) throws ClassNotFoundException, NotFoundException, CannotCompileException {
+    private void profile(ClassPool pool, CtClass ctClass, CtBehavior[] ctBehaviors) throws ClassNotFoundException, NotFoundException, CannotCompileException {
+        String className = ctClass.getName();
         for(CtBehavior ctBehavior : ctBehaviors) {
-            HashMap<String, int[]> __rwCounters = new HashMap<String, int[]>();
             ctBehavior.instrument(new ExprEditor() {
                 public void edit(FieldAccess fa) throws CannotCompileException {
                     if(fa.isStatic()) return;
-                    String cName = fa.getClassName();
-                    
-                    int[] __rwCounter = __rwCounters.getOrDefault(cName, new int[2]);
-                    __rwCounters.putIfAbsent(cName, __rwCounter);
 
+                    String cName = fa.getClassName();
+                    //não conta reads/writes no construtor de variaveis do objecto.
                     if(ctBehavior instanceof CtConstructor && cName.equals(className)) return;
-                    if(fa.isReader())  __rwCounter[0]++;
-                    if(fa.isWriter())  __rwCounter[1]++;
+                    
+                    try {
+                        pool.get(cName).getField("__rwCounter");
+                    } catch(NotFoundException e) {
+                        try {
+                            pool.get(cName).addField(CtField.make("public static int[] __rwCounter = new int[2];", pool.get(cName)));                            
+                        } catch(NotFoundException e1) {}
+                    }
+
+                    if(fa.isWriter())   fa.replace(String.format("{ $0.%s = $1; %s.__rwCounter[1] += 1; }", fa.getFieldName(), cName));
+                    if(fa.isReader())   fa.replace(String.format("{ $_ = $0.%s; %s.__rwCounter[0] += 1; }", fa.getFieldName(), cName));
                 }
             });
-            
-            for(String key : __rwCounters.keySet()) {
-                if(!java.util.Arrays.stream(pool.get(key).getDeclaredFields()).map(f -> f.getName()).anyMatch(fName -> fName.equals("__rwCounter")))
-                    pool.get(key).addField(CtField.make("public static int[] __rwCounter = new int[2];", pool.get(key)));
-                
-                ctBehavior.insertBefore(" { " + key + ".__rwCounter[0] += " + __rwCounters.get(key)[0] + "; " + key + ".__rwCounter[1] += " + __rwCounters.get(key)[1] + "; } ");
-
-                if(ctBehavior instanceof CtConstructor)
-                    ctBehavior.insertBefore(" { " + mainClassName + ".__rwCounters.putIfAbsent(\"" + className + "\", __rwCounter); } ");
+            if(ctBehavior instanceof CtConstructor) {
+                try {
+                    ctClass.getField("__rwCounter");
+                } catch(NotFoundException e) {
+                    ctClass.addField(CtField.make("public static int[] __rwCounter = new int[2];", ctClass));
+                }
+                ctBehavior.insertAfter(" { " + mainClassName + ".__rwCounters.putIfAbsent(\"" + className + "\", __rwCounter); } ");
             }
         }
     }
