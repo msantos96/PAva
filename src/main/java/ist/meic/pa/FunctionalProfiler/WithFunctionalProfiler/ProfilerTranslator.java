@@ -54,18 +54,38 @@ public class ProfilerTranslator implements Translator {
 						System.out.println(cName);
 					}
 
+//					try {
+//						pool.get(cName).getField("__rwCounter");
+//					} catch (NotFoundException e) {
+//						try {
+//							pool.get(cName)
+//									.addField(CtField.make(
+//											"public static int[] __rwCounter = new int[2];",
+//											pool.get(cName)));
+//						} catch (NotFoundException e1) {
+//						}
+//					}
+					
+//					try {
+//						pool.get(cName).getField("__rwCounter");
+//					} catch (NotFoundException e) {
+//						try {
+//							pool.get(cName)
+//									.addField(CtField.make(
+//											"public static int[] __rwCounter = new int[2];",
+//											pool.get(cName)));
+//						} catch (NotFoundException e1) {
+//						}
+//					}
 					try {
-						pool.get(cName).getField("__rwCounter");
+						ctClass.getField("__rwCounters");
 					} catch (NotFoundException e) {
-						try {
-							pool.get(cName)
-									.addField(CtField.make(
-											"public static int[] __rwCounter = new int[2];",
-											pool.get(cName)));
-						} catch (NotFoundException e1) {
-						}
+						ctClass.addField(CtField
+								.make("public ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.RWCounter __rwCounters = " +mainClassName + ".__rwCounters;", ctClass));
 					}
+					//ctBehavior.insertAfter(" { " + mainClassName + ".__rwCounters.putIfAbsent(\"" + className + "\", __rwCounter); } ");
 
+					
 					if (debug)
 						System.out.println("classname :" + className);
 					// não conta reads/writes no construtor de variaveis do objecto.
@@ -78,8 +98,8 @@ public class ProfilerTranslator implements Translator {
 										"{ $_ = $0.%s; %s.__rwCounter[0] += (($0!=null)? 1 : 0); System.out.println(\"1_\"+%s.__rwCounter[0]+\"_\"+\"%s\"+($0!=null)+$0); }",
 										fa.getFieldName(), cName, cName, cName));
 							} else {
-								fa.replace(String.format("{ $_ = $0.%s; %s.__rwCounter[0] += (($0!=null)? 1 : 0);}",
-										fa.getFieldName(), cName));
+								fa.replace(String.format("{ $_ = $0.%s; (($0!=null)? __rwCounters.add_Read(\""+cName+"\") : 0);}",
+										fa.getFieldName()));
 							}
 						}
 						if (fa.isWriter()) {
@@ -90,8 +110,8 @@ public class ProfilerTranslator implements Translator {
 										"{ $0.%s = $1; %s.__rwCounter[1] += (($0!=this)? 1 : 0); System.out.println(\"2_\"+%s.__rwCounter[1]+\"_\"+\"%s\"+($0!=this)+$0);}",
 										fa.getFieldName(), cName, cName, cName));
 							} else {
-								fa.replace(String.format("{ $0.%s = $1; %s.__rwCounter[1] += (($0!=this)? 1 : 0);}",
-										fa.getFieldName(), cName));
+								fa.replace(String.format("{ $0.%s = $1; (($0!=this)? __rwCounters.add_Write(\""+cName+"\") : 0);}",
+										fa.getFieldName()));
 							}
 						}
 						return;
@@ -104,8 +124,7 @@ public class ProfilerTranslator implements Translator {
 									"{ $_ = $0.%s; %s.__rwCounter[0] += 1; System.out.println(\"3_\"+%s.__rwCounter[0]+\"_\"+\"%s\"+$0);}",
 									fa.getFieldName(), cName, cName, cName));
 						} else {
-							fa.replace(String.format("{ $_ = $0.%s; %s.__rwCounter[0] += 1;}", fa.getFieldName(),
-									cName));
+							fa.replace(String.format("{ $_ = $0.%s; __rwCounters.add_Read(\""+cName+"\");}", fa.getFieldName()));
 						}
 					}
 					if (fa.isWriter()) {
@@ -116,20 +135,19 @@ public class ProfilerTranslator implements Translator {
 									"{ $0.%s = $1; %s.__rwCounter[1] += 1; System.out.println(\"4_\"+%s.__rwCounter[1]+\"_\"+\"%s\"+$0);}",
 									fa.getFieldName(), cName, cName, cName));
 						}else{
-							fa.replace(String.format("{ $0.%s = $1; %s.__rwCounter[1] += 1;}", fa.getFieldName(),
-									cName));
+							fa.replace(String.format("{ $0.%s = $1; __rwCounters.add_Write(\""+cName+"\") ;}", fa.getFieldName()));
 						}
 					}
 				}
 			});
 			if (ctBehavior instanceof CtConstructor) {
 				try {
-					ctClass.getField("__rwCounter");
+					ctClass.getField("__rwCounters");
 				} catch (NotFoundException e) {
 					ctClass.addField(CtField
-							.make("public static int[] __rwCounter = new int[2];", ctClass));
+							.make("public ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.RWCounter __rwCounters = " +mainClassName + ".__rwCounters;", ctClass));
 				}
-				ctBehavior.insertAfter(" { " + mainClassName + ".__rwCounters.putIfAbsent(\"" + className + "\", __rwCounter); } ");
+				//ctBehavior.insertAfter(" { " + mainClassName + ".__rwCounters.putIfAbsent(\"" + className + "\", __rwCounter); } ");
 			}
 		}
 	}

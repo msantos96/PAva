@@ -22,6 +22,7 @@ public class Tests {
 			} catch(InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
 				// Should not happen
 				System.out.println("Test method does not exist: " + test);
+				System.out.println(e.getStackTrace());
 			}
 		}
 	}
