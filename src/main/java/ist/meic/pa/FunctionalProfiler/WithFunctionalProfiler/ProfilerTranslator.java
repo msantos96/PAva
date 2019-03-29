@@ -47,18 +47,11 @@ public class ProfilerTranslator implements Translator {
                     
                     if(fa.isReader())
                         fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incRead(\"%s\"); } ", mainClassName, fieldClassName));
+                    if(fa.isWriter() && ctBehavior instanceof CtConstructor && !fieldClassName.equals(className))
+                        fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
                     if(fa.isWriter() && ctBehavior instanceof CtMethod)
                         fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
-                    else if(fa.isWriter() && ctBehavior instanceof CtConstructor && !fieldClassName.equals(className))
-                        fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
                     
-                    try {
-                        if(fa.isWriter() && ctBehavior instanceof CtMethod)
-                            fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
-                        else if(fa.isWriter() && ctBehavior instanceof CtConstructor && ctClass.getField(fa.getFieldName()) != fa.getField())
-                            fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
-                    } catch (NotFoundException e) {}
-                    catch (NullPointerException e) {}
                 }
             });
 

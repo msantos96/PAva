@@ -10,6 +10,13 @@ public class RWCounter {
     public void putIfAbsent(String key, int[] value) {
         __rwCounters.putIfAbsent(key, value);
     }
+    public void incRead(String key) {
+        __rwCounters.get(key)[0]++;
+    }
+    public void incWrite(String key) {
+        __rwCounters.get(key)[1]++;
+    }
+
     public void printProfiles() {
         int[] counter = new int[2];
         for(int[] c : __rwCounters.values()) {
