@@ -48,16 +48,14 @@ public class ProfilerTranslator implements Translator {
                     if(fa.isStatic()) return;
 
                     String fieldClassName = fa.getClassName();
-                    //9
+                    //8 - 9
 
                     if(fa.isReader()) {
                         fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incRead(\"%s\"); } ", mainClassName, fieldClassName));
                     }
                     if(fa.isWriter()) {
                         if(ctBehavior instanceof CtConstructor && fieldClassName.equals(className)) {
-                            //fa.replace(String.format(" { $_ = $proceed($$); if($0.%s != $_) { %s.__rwCounters.incWrite(\"%s\");} } ", fa.getFieldName(), mainClassName,  fieldClassName));
-                            //fa.replace(String.format(" { $_ = $proceed($$); if($0.%s == $_) { %s.__rwCounters.incWrite(\"%s\");} } ", fa.getFieldName(), mainClassName, fieldClassName));
-                            //fa.replace(String.format(" { $_ = $proceed($$); if($_ != null || $_ != $0.%s) { %s.__rwCounters.incWrite(\"%s\");} } ", fa.getFieldName(), mainClassName, fieldClassName));
+                            fa.replace(String.format(" { $_ = $proceed($$); if($0 != this) { %s.__rwCounters.incWrite(\"%s\");} } ", mainClassName,  fieldClassName));
                         }
                         else
                             fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
