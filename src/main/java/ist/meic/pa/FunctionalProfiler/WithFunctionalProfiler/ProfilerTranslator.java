@@ -2,6 +2,9 @@ package ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler;
 
 import javassist.*;
 import javassist.expr.*;
+
+import java.io.IOException;
+
 import ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.Skip;
 
 public class ProfilerTranslator implements Translator {
@@ -28,9 +31,13 @@ public class ProfilerTranslator implements Translator {
             if(ctClass.hasAnnotation(Skip.class)) return;
             profile(pool, ctClass, ctClass.getDeclaredConstructors());
             profile(pool, ctClass, ctClass.getDeclaredMethods());
+            ctClass.writeFile("./theclasses");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
-        }
+        } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     private void profile(ClassPool pool, CtClass ctClass, CtBehavior[] ctBehaviors) throws ClassNotFoundException, NotFoundException, CannotCompileException {
