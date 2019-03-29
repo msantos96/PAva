@@ -28,43 +28,45 @@ public class ProfilerTranslator implements Translator {
         CtClass ctClass = pool.get(className);
         try {
             if(ctClass.isInterface()) return;
-            if(ctClass.hasAnnotation(Skip.class)) return;
             profile(pool, ctClass, ctClass.getDeclaredConstructors());
             profile(pool, ctClass, ctClass.getDeclaredMethods());
             ctClass.writeFile("./theclasses");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
 
     private void profile(ClassPool pool, CtClass ctClass, CtBehavior[] ctBehaviors) throws ClassNotFoundException, NotFoundException, CannotCompileException {
         String className = ctClass.getName();
+        if(ctClass.hasAnnotation(Skip.class)) return;
         for(CtBehavior ctBehavior : ctBehaviors) {
+        	if(ctBehavior.hasAnnotation(Skip.class)) continue;
             ctBehavior.instrument(new ExprEditor() {
                 public void edit(FieldAccess fa) throws CannotCompileException {
-                    if(fa.isStatic()) return;
 
                     String fieldClassName = fa.getClassName();
-                    //8 - 9
+                    
+                    if(fa.isStatic()) return;
+                    
 
                     if(fa.isReader()) {
-                        fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incRead(\"%s\"); } ", mainClassName, fieldClassName));
+                        	fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incRead($0.getClass().getName()); } ", mainClassName));
                     }
                     if(fa.isWriter()) {
                         if(ctBehavior instanceof CtConstructor && fieldClassName.equals(className)) {
-                            fa.replace(String.format(" { $_ = $proceed($$); if($0 != this) { %s.__rwCounters.incWrite(\"%s\");} } ", mainClassName,  fieldClassName));
+                            fa.replace(String.format(" { $_ = $proceed($$); if($0 != this) { %s.__rwCounters.incWrite($0.getClass().getName());} } ", mainClassName));
                         }
                         else
-                            fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite(\"%s\"); } ", mainClassName,  fieldClassName));
+                            fa.replace(String.format(" { $_ = $proceed($$); %s.__rwCounters.incWrite($0.getClass().getName()); } ", mainClassName));
                     }
                 }
             });
 
-            if(ctBehavior instanceof CtConstructor)
-                ctBehavior.insertBefore(String.format(" { %s.__rwCounters.putIfAbsent(\"%s\"); } ", mainClassName, className));
+            if(ctBehavior instanceof CtConstructor) {
+            	ctBehavior.insertBefore(String.format(" { %s.__rwCounters.putIfAbsent(\"%s\"); } ", mainClassName, className));
+            }
         }
     }
 }

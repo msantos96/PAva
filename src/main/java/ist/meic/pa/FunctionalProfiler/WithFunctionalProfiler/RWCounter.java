@@ -1,6 +1,8 @@
 package ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 import ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.Skip;
 
@@ -24,10 +26,11 @@ public class RWCounter {
             counter[1] += c[1];
         }
         
+        Map<String,int[]> orderedMap = new TreeMap<String,int[]>(__rwCounters);
         System.out.print("Total reads: " + counter[0] + " Total writes: " + counter[1]);
-        for(String key : __rwCounters.keySet())
-        	if(__rwCounters.get(key)[0]!=0 || __rwCounters.get(key)[1]!=0) {
-        		System.out.print("\nclass " + key + " -> reads: " + __rwCounters.get(key)[0] + " writes: " + __rwCounters.get(key)[1]);
+        for(String key : orderedMap.keySet())
+        	if(orderedMap.get(key)[0]!=0 || orderedMap.get(key)[1]!=0) {
+        		System.out.print("\nclass " + key + " -> reads: " + orderedMap.get(key)[0] + " writes: " + orderedMap.get(key)[1]);
         	}
     }
 }
