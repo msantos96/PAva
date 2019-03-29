@@ -7,8 +7,8 @@ import ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.Skip;
 @Skip
 public class RWCounter {
     private HashMap<String, int[]> __rwCounters = new HashMap<String, int[]>();
-    public void putIfAbsent(String key, int[] value) {
-        __rwCounters.putIfAbsent(key, value);
+    public void putIfAbsent(String key) {
+        __rwCounters.putIfAbsent(key, new int[2]);
     }
     public void incRead(String key) {
         __rwCounters.get(key)[0]++;
