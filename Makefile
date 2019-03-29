@@ -1,6 +1,7 @@
 CC = gradle build jar
 OPT = -q
 
+JAVAOPT =
 # pasta onde estao guardados os testes
 TD = tests_prof/src/
 # executavel do programa
@@ -46,7 +47,7 @@ verify_all: verify_short verify_long
 #java -cp "build/libs/functionalProfiler.jar;javassist.jar" ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.App TestBattery.jar tests.Tests test2
 
 run%:
-	$(RUN_JAVA) TestBattery.jar tests.Tests test$*
+	$(RUN_JAVA) $(JAVAOPT) TestBattery.jar tests.Tests test$*
 
 test%: $(EXE)
 	@echo 
