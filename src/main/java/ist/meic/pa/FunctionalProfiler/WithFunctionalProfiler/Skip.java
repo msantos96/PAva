@@ -1,4 +1,4 @@
-package ist.meic.pa.FunctionalProfilerExtended;
+package ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler;
 
 import java.lang.annotation.*;
 

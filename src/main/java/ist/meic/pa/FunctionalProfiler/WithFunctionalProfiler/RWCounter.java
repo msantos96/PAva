@@ -2,7 +2,7 @@ package ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler;
 
 import java.util.HashMap;
 
-import ist.meic.pa.FunctionalProfilerExtended.Skip;
+import ist.meic.pa.FunctionalProfiler.WithFunctionalProfiler.Skip;
 
 @Skip
 public class RWCounter {
@@ -19,8 +19,8 @@ public class RWCounter {
         
         System.out.print("Total reads: " + counter[0] + " Total writes: " + counter[1]);
         for(String key : __rwCounters.keySet())
-        	if(__rwCounters.get(key)[0]!=0 || __rwCounters.get(key)[1]!=0) {
+        	//if(__rwCounters.get(key)[0]!=0 || __rwCounters.get(key)[1]!=0) {
         		System.out.print("\nclass " + key + " -> reads: " + __rwCounters.get(key)[0] + " writes: " + __rwCounters.get(key)[1]);
-        	}
+        	//}
     }
 }
