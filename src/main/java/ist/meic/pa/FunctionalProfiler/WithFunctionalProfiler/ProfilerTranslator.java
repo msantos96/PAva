@@ -36,13 +36,12 @@ public class ProfilerTranslator implements Translator {
     private void profile(ClassPool pool, CtClass ctClass, CtBehavior[] ctBehaviors) throws ClassNotFoundException, NotFoundException, CannotCompileException {
         String className = ctClass.getName();
         for(CtBehavior ctBehavior : ctBehaviors) {
+        	if(ctBehavior.hasAnnotation(Skip.class)) continue;
             ctBehavior.instrument(new ExprEditor() {
                 public void edit(FieldAccess fa) throws CannotCompileException {
                     if(fa.isStatic()) return;
 
                     String cName = fa.getClassName();
-                    //não conta reads/writes no construtor de variaveis do objecto.
-                    if(ctBehavior instanceof CtConstructor && cName.equals(className)) return;
                     
                     try {
                         pool.get(cName).getField("__rwCounter");
@@ -52,8 +51,29 @@ public class ProfilerTranslator implements Translator {
                         } catch(NotFoundException e1) {}
                     }
 
-                    if(fa.isWriter())   fa.replace(String.format("{ $0.%s = $1; %s.__rwCounter[1] += 1; }", fa.getFieldName(), cName));
-                    if(fa.isReader())   fa.replace(String.format("{ $_ = $0.%s; %s.__rwCounter[0] += 1; }", fa.getFieldName(), cName));
+                    
+                    System.out.println("classname :"+className);
+                    //não conta reads/writes no construtor de variaveis do objecto.
+                    if(ctBehavior instanceof CtConstructor && cName.equals(className)) {
+                    	if(fa.isReader()) {
+                    		System.out.println("maybe read at: "+fa.getLineNumber()+" "+fa.getClassName()+"."+fa.getFieldName()); 
+                    		
+                    		fa.replace(String.format("{ $_ = $0.%s; %s.__rwCounter[0] += (($0!=null)? 1 : 0); System.out.println(\"1_\"+%s.__rwCounter[0]+\"_\"+\"%s\"+($0!=null)+$0); }", fa.getFieldName(), cName, cName, cName));
+                    	}
+                    	if(fa.isWriter()) {
+                    		System.out.println("maybe write at: "+fa.getLineNumber()+" "+fa.getClassName()+"."+fa.getFieldName());
+                    		fa.replace(String.format("{ $0.%s = $1; %s.__rwCounter[1] += (($0!=this)? 1 : 0); System.out.println(\"2_\"+%s.__rwCounter[1]+\"_\"+\"%s\"+($0!=this)+$0);}", fa.getFieldName(), cName, cName, cName));
+                    	}
+                    	return;
+                    }
+                    if(fa.isReader()) {
+                    	fa.replace(String.format("{ $_ = $0.%s; %s.__rwCounter[0] += 1; System.out.println(\"3_\"+%s.__rwCounter[0]+\"_\"+\"%s\"+$0);}", fa.getFieldName(), cName, cName, cName));
+                    	System.out.println("read at: "+fa.getLineNumber()+" "+fa.getClassName()+"."+fa.getFieldName());
+                    }
+                    if(fa.isWriter()) {
+                    	fa.replace(String.format("{ $0.%s = $1; %s.__rwCounter[1] += 1; System.out.println(\"4_\"+%s.__rwCounter[1]+\"_\"+\"%s\"+$0);}", fa.getFieldName(), cName, cName, cName));
+                    	System.out.println("write at: "+fa.getLineNumber()+" "+fa.getClassName()+"."+fa.getFieldName());
+                    }
                 }
             });
             if(ctBehavior instanceof CtConstructor) {

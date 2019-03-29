@@ -6,8 +6,9 @@ import ist.meic.pa.FunctionalProfilerExtended.Skip;
 import java.lang.reflect.InvocationTargetException;
 import java.io.*;
 
-@Skip
+
 public class Tests {
+	@Skip
 	public static void main(String[] args) {
 		if (args.length < 1) {
 			System.err.println("Usage: Tests test1 ... testn");
@@ -146,10 +147,10 @@ class Person {
 		this.surname = p.surname;
 	}
 	Person(Student t) {
-		this.firstname = t.firstname;
-		t.firstname = "Ron";
-		this.surname = t.surname;
-		t.age = this.age + 20;
+		this.firstname = t.firstname; 	//1 read student
+		t.firstname = "Ron";			//1 reads student, 1 write student
+		this.surname = t.surname;		//2 reads student, 1 write student
+		t.age = this.age + 20;			//1 reads, 2 reads student, 2 writes student
 	}
 	String selfIntroduce() {
 		return this.firstname + " " + this.surname;
