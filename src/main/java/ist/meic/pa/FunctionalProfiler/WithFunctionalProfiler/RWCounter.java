@@ -17,8 +17,10 @@ public class RWCounter {
             counter[1] += c[1];
         }
         
-        System.out.println("\nTotal reads: " + counter[0] + " Total writes: " + counter[1]);
+        System.out.print("Total reads: " + counter[0] + " Total writes: " + counter[1]);
         for(String key : __rwCounters.keySet())
-            System.out.println("class " + key + " -> reads: " + __rwCounters.get(key)[0] + " write: " + __rwCounters.get(key)[1]);
+        	if(__rwCounters.get(key)[0]!=0 && __rwCounters.get(key)[1]!=0) {
+        		System.out.print("\nclass " + key + " -> reads: " + __rwCounters.get(key)[0] + " write: " + __rwCounters.get(key)[1]);
+        	}
     }
 }

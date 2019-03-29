@@ -26,3 +26,5 @@ hs_err_pid*
 .gradle/
 .settings/
 bin/
+build/
+*_output.out

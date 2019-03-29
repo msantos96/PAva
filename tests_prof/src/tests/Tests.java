@@ -1,8 +1,12 @@
 package tests;
 import java.lang.reflect.Method;
+
+import ist.meic.pa.FunctionalProfilerExtended.Skip;
+
 import java.lang.reflect.InvocationTargetException;
 import java.io.*;
 
+@Skip
 public class Tests {
 	public static void main(String[] args) {
 		if (args.length < 1) {
