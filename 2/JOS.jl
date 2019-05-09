@@ -4,7 +4,15 @@ mutable struct Class
     slots
 end
 
-make_class(name, superclasses, slots) = Class(name, superclasses, slots)
+make_class(name, superclasses, slots) = (
+    #order of slots and when names are reused???
+    s = [];
+    for sc in superclasses
+        s = [s..., eval(:($sc.slots))...]
+    end;
+    slots = [s..., slots...];
+    Class(name, superclasses, slots)
+)
 
 #C1 = make_class(:C1, [], [:a])
 #C2 = make_class(:C2, [], [:b, :c])
@@ -15,8 +23,6 @@ macro defclass(expr)
     name = expr.args[1]
     superclasses = expr.args[2].args
     slots = expr.args[3:end]
-    println(name)
-    dump(name)
     :($(esc(name)) = make_class($(Base.Meta.quot(name)), $superclasses, $slots))
 end
 
@@ -24,13 +30,29 @@ end
 @defclass (C2, [], b, c)
 @defclass (C3, [C1, C2], d)
 
-#make_instance()
+mutable struct Instance
+    class :: Class
+    slot_val
+    function Instance(class, slot_val...)
+        #dump(slot_val)
+        dict = Dict()
+        for sv in slot_val
+            if any(x -> x == sv[1], class.slots) #error vs ignore
+                dict[sv[1]] = sv[2]
+            end
+        end
+        new(class, dict)
+    end
+end
 
+make_instance(class, slot_val...) = Instance(class, slot_val...)
 
+c3i1 = make_instance(C3, :a=>1, :b=>2, :c=>3, :d=>4)
+c3i2 = make_instance(C3, :b=>2)
 
-
-
-
+#override get property for
+#   get_slot
+#   set_slot!
 
 square(x) = x*x
 
