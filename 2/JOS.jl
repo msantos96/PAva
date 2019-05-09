@@ -1,4 +1,4 @@
-struct Class
+mutable struct Class
     name
     superclasses
     slots
@@ -17,7 +17,7 @@ macro defclass(expr)
     slots = expr.args[3:end]
     println(name)
     dump(name)
-    :($(esc(name)) = make_class((:)$name, $superclasses, $slots))
+    :($(esc(name)) = make_class($(Base.Meta.quot(name)), $superclasses, $slots))
 end
 
 @macroexpand @defclass (C1, [], a)
