@@ -4,7 +4,7 @@
 
 # This file should be placed in the same directory as the JOS.jl. Alternatively,
 # you can change the path of the file in include("relativepath/to/srcfolder/JOS.jl").
-include("JOS.jl")
+include("JOSExtended.jl")
 
 import Base.@assert
 # -------------------------------------------------------------------------
@@ -126,7 +126,7 @@ ist2 = make_instance(IstStudent, :course=>"Advanced Programming", :name=>"Martia
 @assert test_error(() -> work_on_project(s1, p1), method_error())   # Test 18
 @assert work_on_project(p1, ist1) == "Anna is watching the IST Student, Edmond, studying and doing the project of the course AI..." # Test 19
 @assert work_on_project(ist1, p1) == "The IST Student Edmond is studying and doing the project and Anna is watching..."   # Test 20
-
+work_on_project(ist1, ist2)
 @assert work_on_project(ist1, ist2) == "Both Edmond and Martia are working on the project!" # Test 21
 
 # Print total counts of failed tests
