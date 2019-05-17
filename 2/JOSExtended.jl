@@ -59,7 +59,13 @@ end
 mutable struct Generic
     name :: Symbol
     parameters :: Vector{Symbol}
-    methods :: Dict{Array,Method} #{[type1,type2,...]=>Method}
+    before_methods :: Dict{Array,Method}  #{[type1,type2,...]=>Method}
+    methods :: Dict{Array,Method}  #{[type1,type2,...]=>Method}
+    after_methods :: Dict{Array,Method}  #{[type1,type2,...]=>Method}
+
+    function Generic(class, parameters)
+        new(class, parameters, Dict(), Dict(), Dict())
+    end
 end
 
 macro defgeneric(expr)
@@ -68,19 +74,28 @@ macro defgeneric(expr)
     if length(parameters) != length(Set(parameters))
         error("Duplicate variable name")
     end
-    :($(esc(name)) = Generic($(Base.Meta.quot(name)), $parameters, Dict()))
+    :($(esc(name)) = Generic($(Base.Meta.quot(name)), $parameters))
 end
 
-function defmethod(gen, vartypes, lambda)
+function defmethod(gen, vartypes, lambda, qualifier)
     if length(vartypes) != length(gen.parameters)
-        error("Required ", length(gen.parameters)
-            , " parameter(s) but ", length(vartypes), " given")
+        error("Required ", length(gen.parameters), " parameter(s) but ", length(vartypes), " given")
     end
 
-    gen.methods[vartypes] = Method(vartypes, lambda)
+    if qualifier == :before
+        gen.before_methods[vartypes] = Method(vartypes, lambda)
+    elseif qualifier == :after
+        gen.after_methods[vartypes] = Method(vartypes, lambda)
+    else
+        gen.methods[vartypes] = Method(vartypes, lambda)
+    end
 end
 
 macro defmethod(expr)
+    :(@defmethod(nothing, $expr))
+end
+
+macro defmethod(qualifier, expr)
     name = expr.args[1].args[1]
     parameters = expr.args[1].args[2:end]
     body = expr.args[2].args[2]
@@ -92,7 +107,7 @@ macro defmethod(expr)
         error("Duplicate variable name")
     end
 
-    :(defmethod($(name), $vartypes, ($(varnames...),)->$body))
+    :(defmethod($(name), $vartypes, ($(varnames...),)->$body, $qualifier))
 end
 
 function expand(idx, argstypes)
@@ -117,20 +132,31 @@ function getPermutations(argstypes)
     return expanded
 end
 
-function getEffectiveMethod(methods, args...)
-    argstypes = [getfield(a, :class) for a in args]
+function getEffectiveMethods(methods, expanded)
+    return [methods[types] for types in expanded if haskey(methods, types)]
+end
 
-    [println(alo) for alo in getPermutations(argstypes)]
-    [println(methods[types]) for types in getPermutations(argstypes) if haskey(methods, types)]
+function applyEffectiveMethods(f, args...)
+    expanded = getPermutations([getfield(a, :class) for a in args])
 
-    for types in getPermutations(argstypes)
-        if haskey(methods, types)
-            return methods[types]
+    before = getEffectiveMethods(f.before_methods, expanded)
+    method = getEffectiveMethods(f.methods, expanded)
+    after = getEffectiveMethods(f.after_methods, expanded)
+
+    if length(method) == 0
+        if length(before) != 0 || length(after) != 0
+            error("No primary method")
+        else
+            error("No applicable method")
         end
     end
 
-    error("No applicable method")
+    for b in before b(args...) end
+    res = method[1](args...)
+    for a in after a(args...) end
+
+    return res
 end
 
 (f::Method)(args...) = f.lambda(args...)
-(f::Generic)(args...) = getEffectiveMethod(f.methods, args...)(args...)
+(f::Generic)(args...) = applyEffectiveMethods(f, args...)
