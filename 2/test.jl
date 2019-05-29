@@ -4,7 +4,7 @@
 
 # This file should be placed in the same directory as the JOS.jl. Alternatively,
 # you can change the path of the file in include("relativepath/to/srcfolder/JOS.jl").
-include("JOSExtended.jl")
+include("JOS.jl")
 
 import Base.@assert
 # -------------------------------------------------------------------------
